@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html>
+<head> 
+    <title>Credit Report</title> 
+    <link rel = "icon" href =  
+    "C:\import-excel\import-excel\excel1.png" 
+            type = "image/x-icon"> 
+              
+    <link rel="stylesheet" href="./index.css"/>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src= "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    </style>
+</head> 
+
+
+
+<body>
+    
+
+    <div class="outer-container">
+        <! --img src="logo1.png" alt="logo" / -->
+        <h1>Import CRS File into IBS System </h1>
+        <form enctype="multipart/form-data">
+        </div>
+        <div class="outer-container1">
+                <label>Choose Excel File</label> 
+                <input type="file"
+                    name="file" id="file"    accept=".xls,.xlsx">
+                
+                   <button type="submit" id="submit" name="import"
+                    class="btn-submit">Import</button>
+
+            </div>
+            
+
+        </form>
+
+    </div>
+  
+</body>
+</html>
+
+
+<script>
+
+function s2ab(s) {
+    var buf = new ArrayBuffer(s.length);
+    var view = new Uint8Array(buf);
+    for (var i=0; i!=s.length; ++i)
+         view[i] = s.charCodeAt(i) & 0xFF;
+         return buf;
+}
+
+
+
+document.getElementById('file').addEventListener("change",
+  function(e) {
+     var files = e.target.files,file;
+     if (!files || files.length == 0) return;
+     file = files[0];
+     var fileReader = new FileReader();
+     fileReader.onload = function (e) {
+       var filename = file.name;
+       var binary = "";
+       var bytes = new Uint8Array(e.target.result);
+       var length = bytes.byteLength;
+       for (var i = 0; i < length; i++) {
+         binary += String.fromCharCode(bytes[i]);
+       }
+      var workbook = XLSX.read(binary, {type: 'binary', cellDates:true, cellStyles:true});
+      var wopts = { bookType:'xlsx', bookSST:false, type:'base64' };
+      var wbout = XLSX.write(workbook,wopts);
+      var blob = new Blob([s2ab(atob(wbout))],{type: 'application/octet-stream'});
+      var formData = new FormData();
+      formData.append('filetoupload', blob,'CRS.xlsx');
+
+      $.ajax({
+          url: 'http://localhost:8081/upload',
+          type: 'POST',
+          data: formData,
+          success:function(data){
+             console.log(data);
+          },
+          cache: false,
+          contentType: false,
+          processData: false
+        });
+      };
+      fileReader.readAsArrayBuffer(file);
+
+
+     
+});
+
+
+</script>
+
+
+
+
